@@ -1,0 +1,1 @@
+.\venv\Scripts\python.exe .\loan_reader.py >> results.txt
