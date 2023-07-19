@@ -1,1 +1,5 @@
 results.txt
+/venv*
+/build*
+/dist*
+/loan_reader.spec

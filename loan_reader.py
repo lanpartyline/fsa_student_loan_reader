@@ -3,6 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 import re
 import os
+import sys
 
 def main():  
     loans_obj = loans(find_file())
@@ -13,7 +14,7 @@ def main():
 def find_file():
     # Download File Here: https://studentaid.gov/aid-summary/loans, click "Download My Aid Data"
     look_for_files = ['mystudentdata.txt']
-    look_in = [f'C:\\Users\\{os.getenv("USERNAME")}\\Downloads\\']
+    look_in = [f'{os.getenv("HOMEPATH")}\\Downloads\\']
     file = None
     for folder in look_in:
         for file in look_for_files:
@@ -30,7 +31,7 @@ def currency_to_decimal(money: str) -> Decimal:
     return Decimal(re.sub(r'[^\d.]', '', money))
 
 def format_to_currency(num: int | float) -> str:
-    return '$ {:0,.0f}'.format(num)
+    return '${:0,.0f}'.format(num)
 
 def datestr_to_obj(datestring: str) -> datetime:
     return datetime.strptime(datestring, '%m/%d/%Y')
@@ -445,4 +446,5 @@ class loan:
                     print(f'{f} = {self.__dict__[f]}')
 
 if __name__ == '__main__':
+    sys.stdout = open('results.txt','wt')
     main()

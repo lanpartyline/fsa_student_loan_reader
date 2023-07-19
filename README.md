@@ -2,14 +2,41 @@
 
 ### Purpose:
 
-This project is meant to assist people in finding out about their repayment counts.
+This project is meant to help in finding how many repayment counts have been made under the IDR adjustment. It uses data downloaded from studentaid.gov, parses it, and returns information that isn't so easily gleaned from their website. This simply writes to results.txt in the local directory for you to examine. It does not communicate with anything, its completely local, take a look at the source code.
+
+My observations... the data is a mess and I'm sure I haven't see all the intricacies.
 
 ### How it works:
 
-1. Download this repo to a local folder on your computer.
-2. Download your studnet aid file. Here: https://studentaid.gov/aid-summary/loans, click "Download My Aid Data". (You may need to log in first, then click the link) It should download to your downloads directory. If you download elsewhere, put in in your downloads directory.
-3. Execute run.bat
-4. Open results.txt
+A. If you trust me, you can download a binary for Windows.
+
+1. Download zip. Here: https://drive.google.com/drive/folders/1RkbjrH5pOpBANMTMi-V8uzmc2qFXUGlD
+2. Unzip it.
+
+A. If you want to run it natively (as in the source code you see) using python, do the following.
+- (You can skip these steps if you have the binary)
+
+1. clone this repo to your machine. 
+    - git clone https://github.com/lanpartyline/fsa_student_loan_reader.git
+2. Download and install Python on your machine.
+    - https://www.python.org/downloads/
+
+B. Download your data.
+
+1. Download your studnet aid file.
+    1. You need to log in first.
+        - https://studentaid.gov/fsa-id/sign-in/landing
+    2. Click the link below.
+        - https://studentaid.gov/aid-summary/loans
+    3. Click "Download My Aid Data".
+        - It should download to your downloads directory. If you download it elsewhere, put it in your downloads directory.  It looks for the file MyStudentData.txt
+
+C. Run it.
+
+1. Execute loan_reader.exe
+    - Or (if running it native python) python3 loan_reader.py
+    - it might say it will scan for viruses, I'm not doing anything funny, it's Microsoft being careful.
+2. Open results.txt in the same folder
 
 ### Results Layout:
 
@@ -53,3 +80,7 @@ The file should be divided into sections like these:
   - I tried my best but this thing makes a lot of assumptions.
 - This is NOT financial advice.
 - USE AT YOUR OWN RISK!
+
+### Bugs and Issues
+
+Feel free to submit an issue but I don't have much time to dedicate to this and its a bit difficult to troubleshoot without having your specific data. PLEASE DO NOT post private info.
