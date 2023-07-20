@@ -3,3 +3,4 @@ results.txt
 /build*
 /dist*
 /loan_reader.spec
+/__pycache__
