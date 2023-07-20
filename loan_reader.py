@@ -1,4 +1,3 @@
-from pprint import pprint
 from datetime import datetime
 from decimal import Decimal
 import re
@@ -6,10 +5,10 @@ import os
 import sys
 
 def main():  
-    loans_obj = loans(find_file())
-    loans_obj.print_loans_summary()
-    loans_obj.print_all_loan_details()
-    loans_obj.print_longest_payment_chains()
+    loans_obj = loans(read_file(find_file()))
+    print('\n'.join(loans_obj.print_loans_summary()))
+    print('\n'.join(loans_obj.print_all_loan_details()))
+    print('\n'.join(loans_obj.print_longest_payment_chains()))
     
 def find_file():
     # Download File Here: https://studentaid.gov/aid-summary/loans, click "Download My Aid Data"
@@ -24,6 +23,11 @@ def find_file():
     print(f'Looked for {look_for_files} in {look_in}')
     exit()
 
+def read_file(filepath):
+    with open(filepath) as f:
+        fc = f.read()
+    return fc
+
 def mon_between(d1: datetime, d2: datetime) -> int:
     return round(abs((d2 - d1).days/30))
 
@@ -34,7 +38,7 @@ def format_to_currency(num: int | float) -> str:
     return '${:0,.0f}'.format(num)
 
 def datestr_to_obj(datestring: str) -> datetime:
-    return datetime.strptime(datestring, '%m/%d/%Y')
+    return datetime.strptime(datestring.strip(), '%m/%d/%Y')
    
 def dateobj_to_str(date: datetime) -> str:
     return datetime.strftime(date, '%m/%d/%Y')
@@ -43,15 +47,12 @@ def dateobj_to_str_mo_yr(date: datetime) -> str:
     return datetime.strftime(date, '%m/%Y')
 
 class loans:
-    def __init__(self, path):
+    def __init__(self, contents):
         self.forgive_start = datetime.strptime('7/1/1994', '%m/%d/%Y')
-        self.file_path = path
-        self.file_lines, self.file_data = self.read_file(path)
+        self.contents = contents
+        self.file_lines, self.file_data = self.read_contents(contents)
         self.data_source = next(iter(self.file_data[0].values()))
         self.data_pulled = next(iter(self.file_data[1].values()))
-        for i in range(0, 1):
-            self.file_data.pop(i)
-            self.file_lines.pop(i)
         self.parse_loan_details()
         self.parse_enrollment_info()
         self.parse_award_info()
@@ -93,10 +94,8 @@ class loans:
         self.n_cons_loans = len(self.consolidated_loans)
         self.n_canc_loans = len(self.cancelled_loans)
         
-    def read_file(self, filepath) -> tuple[list, list[dict]]:
-        with open(filepath) as f:
-            fc = f.read()
-        file_lines = [e for e in fc.split('\n')]
+    def read_contents(self, contents) -> tuple[list, list[dict]]:
+        file_lines = [e.replace('\r', '') for e in contents.split('\n')]
         file_data = [{e.split(':')[0]: e.split(':')[1]} for e in file_lines]
         return file_lines, file_data
         
@@ -236,63 +235,69 @@ class loans:
             if e['total_payments'] == self.longest_payment
         ]
                 
-    def print_loans_summary(self):
-        print('-'*100)
-        print('Loans Summary')
-        print('-'*100)
-        print('Num of Loans        :', self.n_all_loans)
-        print('Num of Orig. Loans  :', self.n_orig_loans)
-        print('Num of Cons. Loans  :', self.n_cons_loans)
-        print('Num of Canc. Loans  :', self.n_canc_loans)
-        print('Orig. Loaned Amt    :', '$ {:0,.0f}'.format(self.originally_loaned))
-        print('Capitalized Interest:', '$ {:0,.0f}'.format(self.capitalized_interest))
-        print('Current Principal   :', '$ {:0,.0f}'.format(self.current_principal))
-        print('Current Interest    :', '$ {:0,.0f}'.format(self.current_interest))
-        print('Current Total       :', '$ {:0,.0f}'.format(self.current_total))
-        print('Pct Remaining       :', '{:0,.0f} %'.format(self.pct_remaining))
+    def print_loans_summary(self) -> list:
+        output = []
+        output.append('-'*100)
+        output.append('Loans Summary')
+        output.append('-'*100)
+        output.append(f'Num of Loans        : {self.n_all_loans}')
+        output.append(f'Num of Orig. Loans  : {self.n_orig_loans}')
+        output.append(f'Num of Cons. Loans  : {self.n_cons_loans}')
+        output.append(f'Num of Canc. Loans  : {self.n_canc_loans}')
+        output.append(f'Orig. Loaned Amt    : {format_to_currency(self.originally_loaned)}')
+        output.append(f'Capitalized Interest: {format_to_currency(self.capitalized_interest)}')
+        output.append(f'Current Principal   : {format_to_currency(self.current_principal)}')
+        output.append(f'Current Interest    : {format_to_currency(self.current_interest)}')
+        output.append(f'Current Total       : {format_to_currency(self.current_total)}')
+        output.append(f'Pct Remaining       : '+ '{:0,.0f} %'.format(self.pct_remaining))
         
         # Check for oddities and print warnings
         warnings = []
         if self.capitalized_interest + self.originally_loaned != self.current_principal:
             warnings.append('Original Principals + Capitalized Amount Does NOT add up.')
         if len(warnings) > 0:
-            print('WARNINGs:')
+            output.append('WARNINGs:')
         for i, e in enumerate(warnings):
-            print(f'  {i+1} - {e}')
+            output.append(f'  {i+1} - {e}')
         
-        print('-'*100)
-        print('Unpaid Loans')
-        print('-'*100)
+        output.append('-'*100)
+        output.append('Unpaid Loans')
+        output.append('-'*100)
         for i, e in enumerate(self.current_loans):
-            print(f'{i+1} - {e.loan_award_id} - {e.loan_type}')
-            print(f'Loan Date: {e.loan_date} - ' \
+            output.append(f'{i+1} - {e.loan_award_id} - {e.loan_type}')
+            output.append(f'Loan Date: {e.loan_date} - ' \
                   f'Loan Amount: {e.net_loan_amount} - '\
                   f'Current Status: {e.current_loan_status_description}')
-            print('')
+            output.append('')
+        return output
         
-    def print_all_loan_details(self):
-        print('-'*100)
-        print('Loan Details')
-        print('-'*100)
+    def print_all_loan_details(self) -> list:
+        output = []
+        output.append('-'*100)
+        output.append('Loan Details')
+        output.append('-'*100)
         for e in self.all_loans:
-            e.print_details()
-            print('')
-        print('-'*100)
-        print('Consolidation Log')
-        print('-'*100)
-        pprint(self.consolidation_log)
+            output.append('\n'.join(e.print_details()))
+            output.append('')
+        output.append('-'*100)
+        output.append('Consolidation Log')
+        output.append('-'*100)
+        output.append('\n'.join(self.consolidation_log)+'\n')
+        return output
         
-    def print_longest_payment_chains(self):
-        print('-'*100)
-        print('Longest Payment Chain Details')
-        print('-'*100)
-        print(f'longest_payment = {self.longest_payment}')
-        print('')
+    def print_longest_payment_chains(self) -> list:
+        output = []
+        output.append('-'*100)
+        output.append('Longest Payment Chain Details')
+        output.append('-'*100)
+        output.append(f'longest_payment = {self.longest_payment}')
+        output.append('')
         for i, e in enumerate(self.possible_longest_chains):
-            print(f'CHAIN {i+1} {"-"*50}')
+            output.append(f'CHAIN {i+1} {"-"*50}')
             for e2 in e:
-                e2.print_details()
-                print('')
+                output.append('\n'.join(e2.print_details()))
+                output.append('')
+        return output
 
 class loan:
     def __init__(self, data: list[dict]):
@@ -413,7 +418,8 @@ class loan:
                 )
             self.consolidated_amount = sum(self.consolidated_amounts)
                 
-    def print_details(self):
+    def print_details(self) -> list:
+        output = []
         attribs = [
             'loan_type_description',
             'current_loan_status_description',
@@ -428,23 +434,30 @@ class loan:
             'consolidated_by',
             'consolidates',
             'consolidated_amount',
-            'payment_map'
+            'payment_map',
+            'status_changes'
         ]
         for f in attribs:
             if self.__dict__.get(f):
                 if f == 'consolidates':
-                    print(f'{f} = {[e.loan_award_id for e in self.__dict__[f]]}')
+                    output.append(f'{f} = {[e.loan_award_id for e in self.__dict__[f]]}')
                 elif f == 'consolidated_by':
-                    print(f'{f} = {self.__dict__[f].loan_award_id}')
+                    output.append(f'{f} = {self.__dict__[f].loan_award_id}')
                 elif f == 'first_repayment':
-                    print(f'{f} = {dateobj_to_str(self.first_repayment)}')
+                    output.append(f'{f} = {dateobj_to_str(self.first_repayment)}')
                 elif f == 'total_disbursed':
-                    print(f'{f} = {format_to_currency(self.total_disbursed)}')
+                    output.append(f'{f} = {format_to_currency(self.total_disbursed)}')
                 elif f == 'consolidated_amount':
-                    print(f'{f} = {format_to_currency(self.consolidated_amount)}')
+                    output.append(f'{f} = {format_to_currency(self.consolidated_amount)}')
+                elif f == 'status_changes':
+                    output.append(
+                        "\n".join([f'{e["Loan Status Description"]}: {e["Loan Status Effective Date"]}' for e in self.status_changes])
+                    )
                 else:
-                    print(f'{f} = {self.__dict__[f]}')
+                    output.append(f'{f} = {self.__dict__[f]}')
+        return output
 
 if __name__ == '__main__':
-    sys.stdout = open('results.txt','wt')
-    main()
+    with open('results.txt','wt') as f:
+        sys.stdout = f
+        main()
