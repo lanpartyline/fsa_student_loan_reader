@@ -8,15 +8,12 @@ My observations... the data is a mess and I'm sure I haven't see all the intrica
 
 ### How it works:
 
-A. If you trust me, you can download a binary for Windows.
-
-1. Download zip. Here: https://drive.google.com/drive/folders/1RkbjrH5pOpBANMTMi-V8uzmc2qFXUGlD
-2. Unzip it.
+A. If you trust me, I have an instance running here: https://mystudentdatatxt.com/.
+ - Simply copy and paste the contents of the text. (no data is stored anywhere)
 
 A. If you want to run it natively (as in the source code you see) using python, do the following.
-- (You can skip these steps if you have the binary)
 
-1. clone this repo to your machine. 
+1. clone this repo to your machine.
     - git clone https://github.com/lanpartyline/fsa_student_loan_reader.git
 2. Download and install Python on your machine.
     - https://www.python.org/downloads/
@@ -33,9 +30,7 @@ B. Download your data.
 
 C. Run it.
 
-1. Execute loan_reader.exe
-    - Or (if running it native python) python3 loan_reader.py
-    - it might say it will scan for viruses, I'm not doing anything funny, it's Microsoft being careful.
+1. Execute python3 loan_reader.py
 2. Open results.txt in the same folder
 
 ### Results Layout:
