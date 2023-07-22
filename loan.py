@@ -264,7 +264,8 @@ class loan:
                 else:
                     output.append(f'{f} = {self.__dict__[f]}')
         output.append('')
-        output.append(self.status_pd_cal.to_html().replace('\n', ''))
+        if not self.is_cancelled:
+            output.append(self.status_pd_cal.to_html().replace('\n', ''))
         return output
 
     ############################ END DISPLAYING RESULTS ##########################################
