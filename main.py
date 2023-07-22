@@ -27,12 +27,12 @@ def home():
         app.logger.info(f'Success reading data')
     except:
         app.logger.critical(f'Error reading data')
-        console_print = 'Error reading data'    
+        console_print = 'Error reading data'
     return console_print
 
 if __name__ == '__main__':
     if ENV == 'PROD':
-        app.run(ssl_context=('cert.pem', 'privkey.pem'))
+        app.run(ssl_context=('cert.pem', 'privkey.pem'), port=443, host='0.0.0.0')
     else:
         app.run(debug=True, ssl_context='adhoc')
     time.sleep(5)
