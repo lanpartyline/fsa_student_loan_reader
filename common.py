@@ -49,7 +49,7 @@ def currency_to_decimal(money: str) -> dec:
     """
     return dec(re.sub(r'[^\d.]', '', money))
 
-def format_to_currency(num: int | float | dec) -> str:
+def format_to_currency(num) -> str:
     """Formats number to currency
 
     :param num: number to be formatted
@@ -82,7 +82,7 @@ def dateobj_to_str_mo_yr(date: dt) -> str:
     return dt.strftime(date, '%m/%Y')
 
 def cal_list_to_pd_cal(cal_list: list, f_mo: int, f_yr: int):
-    """Take a list of statuses and formats into a pandas df 
+    """Take a list of statuses and formats into a pandas df
      that is a calendar representation of the statuses
 
     :param cal_list: list of statuses
