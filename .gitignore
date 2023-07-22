@@ -4,3 +4,5 @@ results.txt
 /dist*
 /loan_reader.spec
 /__pycache__
+*.pem
+*.ipynb
