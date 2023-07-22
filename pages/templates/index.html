@@ -1,5 +1,10 @@
+<script>
+    function ClearFields() {
+        document.getElementById("input").value = "";
+   }
+</script>
 <form action="/" method="post">
-    <textarea name="textarea" rows="40" cols="80">Paste Contents of MyStudentData File</textarea>
+    <textarea id="input" name="textarea" onclick="ClearFields();" rows="40" cols="80">Paste Contents of MyStudentData File Here</textarea>
     <br>
     <input type="submit" name="submitInfo" value="Submit">
 </form>
