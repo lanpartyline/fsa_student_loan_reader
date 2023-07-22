@@ -64,7 +64,7 @@ def datestr_to_obj(datestring: str) -> dt:
     :return: datetime obj
     """
     return dt.strptime(datestring.strip(), '%m/%d/%Y')
-   
+
 def dateobj_to_str(date: dt) -> str:
     """Takes a datetime obj and formats into a string '%m/%d/%Y'
 
@@ -92,16 +92,16 @@ def cal_list_to_pd_cal(cal_list: list, f_mo: int, f_yr: int):
     """
     # add offset to start in Jan
     lcal = ['' for i in range(0, f_mo - 1)] + cal_list
-    
+
     # add offset to end in Dec
     ct_cal = len(lcal)
     remining_mon = ct_cal % 12
     if remining_mon > 0:
         lcal = lcal + ['' for e in range(0, 12 - remining_mon)]
-        
+
     # divide up the entire cal into parts of 12
     cals = [lcal[x:x+12] for x in range(0, ct_cal, 12)]
-        
+
     # create the labels for each month
     cal_records = []
     for e in cals:
@@ -109,7 +109,7 @@ def cal_list_to_pd_cal(cal_list: list, f_mo: int, f_yr: int):
         for i, e2 in enumerate(e, start=1):
             year_dict.update({dt(1900, i, 1).strftime('%B'): e2})
         cal_records.append(year_dict)
-    
+
     # create a list of pd frames of cals
     yr_idx = [f_yr + i for i in range(0, len(cal_records))]
     pd_cals = [
@@ -137,7 +137,7 @@ def create_most_favorable_cal(cal_list: list[set]) -> list[str]:
         if not chosen:
             favorable_cal.append(list(e)[0])
     return favorable_cal
-        
+
 def count_qualified_months(cal_list: list, dates_list: list[dt], isPaid: bool=False) -> int:
     """Returns a count of qualified months under the IDR adjustment
 
@@ -154,7 +154,7 @@ def count_qualified_months(cal_list: list, dates_list: list[dt], isPaid: bool=Fa
     # because it is impossible to tell the diff. between economic vs other deferments,
     #   we must assume all deferment is not applicable.
     #  therefore, we on have to deal with RP and FB.
-    
+
     list_len = len(cal_list) - 1
     covid_fb_start = dt(2020, 3, 1)
     rp, cum_fb, accumulated_con_fb, cont_fb, prev_stat = 0, 0, 0, 0, ''

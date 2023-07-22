@@ -24,7 +24,7 @@ class account:
         self.create_pd_cals()
         self.qualified_months = count_qualified_months(self.favorable_cal, self.dates_cal)
         # self.borrow_cal_favorable = self.get_most_favorable_cal(self.borrow_cal)
-        
+
         self.original_loans = [e for e in 
             self.all_loans if not e.is_consolidated and not e.is_cancelled
         ]
@@ -49,7 +49,7 @@ class account:
         ])
         self.current_total = self.current_interest + self.current_principal
         self.pct_remaining = round(self.current_total/self.originally_loaned*100, 2)
-        
+
         self.n_all_loans = len(self.all_loans)
         self.n_orig_loans = len(self.original_loans)
         self.n_cons_loans = len(self.consolidated_loans)
@@ -61,25 +61,25 @@ class account:
         file_lines = [e.replace('\r', '') for e in contents.split('\n')]
         file_data = [{e.split(':')[0]: e.split(':')[1]} for e in file_lines]
         return file_lines, file_data
-        
+
     def parse_loan_details(self):
         loan_starts = [
             i for i, e in enumerate(self.file_data)
             if 'Loan Type Code' == next(iter(e.keys()))
-        ]        
-        
+        ]
+
         loan_ends = [e for e in loan_starts[1:]]
         # get the last line for the final loan
         ii = loan_ends[-1]
         loan_ends = loan_ends + [
             i+ii for i, e in enumerate(self.file_data[ii:])
-            if 'Loan Special Contact' == next(iter(e.keys()))]        
-        
+            if 'Loan Special Contact' == next(iter(e.keys()))]
+
         loan_start_ends = [
             (loan_starts[i], loan_ends[i])
             for i in range(0, len(loan_ends))
         ]
-        
+
         self.all_loans = [
             loan(self.file_data[e[0]: e[1]])
             for e in loan_start_ends
@@ -87,7 +87,7 @@ class account:
         self.non_loan_file_data = \
             self.file_data[0: loan_start_ends[0][0]] + \
             self.file_data[loan_start_ends[-1][1]: -1]
-    
+
     def parse_enrollment_info(self):
         self.enrollment_log = [
             e for e in self.non_loan_file_data 
@@ -102,43 +102,43 @@ class account:
             for e in self.enrollment_log[x:x+5]:
                 change.update(e)
             self.enrollment_info.append(change)
-        
+
     def parse_studnet_info(self):
         self.student_log = [
             e for e in self.non_loan_file_data if 'Student' in next(iter(e.keys()))]
         for e in self.student_log:
             self.non_loan_file_data.remove(e)
-            
+
     def parse_award_info(self):
         self.award_log = [
             e for e in self.non_loan_file_data if 'Award' in next(iter(e.keys()))
         ]
         for e in self.award_log:
             self.non_loan_file_data.remove(e)
-            
+
     def parse_undergrad_info(self):
         self.undergrad_log = [
             e for e in self.non_loan_file_data if 'Undergraduate' in next(iter(e.keys()))
         ]
         for e in self.undergrad_log:
             self.non_loan_file_data.remove(e)
-            
+
     def parse_grad_info(self):
         self.grad_log = [
             e for e in self.non_loan_file_data if 'Graduate' in next(iter(e.keys()))
         ]
         for e in self.grad_log:
             self.non_loan_file_data.remove(e)
-    
+
     def parse_program_info(self):
         self.program_log = [
             e for e in self.non_loan_file_data if 'Program' in next(iter(e.keys()))
         ]
         for e in self.program_log:
             self.non_loan_file_data.remove(e)
-            
+
     ############################ END READING AND PARSING FILE ##########################################
-                
+
     def cal_relative_pos(self, loanObj: loan) -> tuple[int, int]:
         """Returns the start and end index where the loan's "calendar" fits in to the overall calendar.
         i.e. given a list of months  [i, ia, ... ix ... iy ... iz] where does it start in the list, ix, and end, iy.
@@ -153,15 +153,15 @@ class account:
             end_idx = diff_month(self.all_loans[0].loan_date_obj, loanObj.paid_on_obj)
         else:
             end_idx = diff_month(self.all_loans[0].loan_date_obj, dt.today())
-        return start_idx, end_idx            
-    
+        return start_idx, end_idx
+
     def sort_loans(self):
         order = []
         for i, e in enumerate(self.all_loans):
             order.append((e.loan_date, e))
         ordered_loans = sorted(order, key=lambda x: datestr_to_obj(x[0]))
         self.all_loans = [e[1] for e in ordered_loans]
-    
+
     def get_loan_by_id(self, id: str):
         fetch_loans = [e for e in self.all_loans if e.loan_award_id == id]
         if len(fetch_loans) == 1:
@@ -170,7 +170,7 @@ class account:
             raise Exception(f'Cannot find loan {id}')
         else:
             raise Exception(f'More than 1 loan found! {fetch_loans}')
-        
+
     def create_consolidations(self):
         self.consolidation_log = []
         for o in [e for e in self.all_loans if isinstance(e.paid_on, str)]:
@@ -184,7 +184,7 @@ class account:
                     break # loan can only consolidated by 1 other loan... which isn't technically true but lets assume
         for e in self.all_loans:
             e.check_consolidation_amounts()
-                
+
     def merge_loan_cal_to_status_cal(self, loanObj: loan, acct_cal: list[set]):
         start_idx, end_idx = self.cal_relative_pos(loanObj)
         for loan_idx, bor_idx in enumerate(range(start_idx, end_idx)):
@@ -200,7 +200,7 @@ class account:
             account_cal = self.merge_loan_cal_to_status_cal(loanObj, account_cal)
         self.status_cal = account_cal
         self.dates_cal = [first_date + relativedelta(months=+i) for i in range(0, borrower_months)]
-    
+
     def create_pd_cals(self):
         self.status_pd_cal = cal_list_to_pd_cal(
             self.status_cal,
@@ -212,14 +212,14 @@ class account:
             self.dates_cal[0].month,
             self.dates_cal[0].year
         )
-        
+
     def create_status_description_map(self):
         status_description_map = {}
         for e in self.all_loans:
             for e2 in e.status_changes:
                 status_description_map[e2['Loan Status']] = e2['Loan Status Description']
         self.status_description_map = status_description_map
-    
+
     # def calculate_longest_payment_chain(self):
     #     def get_loan_chain(l: loan) -> list:
     #         chain = [l]
@@ -252,15 +252,15 @@ class account:
     #     for e in loan_trace:
     #         if e['total_payments'] > self.longest_payment:
     #             self.longest_payment = e['total_payments']
-                
+
     #     self.possible_longest_chains = [
     #         e['loan_chain']
-    #         for e in loan_trace 
+    #         for e in loan_trace
     #         if e['total_payments'] == self.longest_payment
     #     ]
-         
+
     ############################ DISPLAYING RESULTS ##########################################
-           
+
     def print_loans_summary(self) -> list:
         output = []
         output.append('-'*100)
@@ -295,7 +295,7 @@ class account:
         #     output.append('WARNINGs:')
         # for i, e in enumerate(warnings):
         #     output.append(f'  {i+1} - {e}')
-        
+
         output.append('-'*100)
         output.append('Current Active Loans')
         output.append('-'*100)
@@ -307,7 +307,7 @@ class account:
             output.append('')
         output.append('')
         return output
-        
+
     def print_all_loan_details(self) -> list:
         output = []
         output.append('-'*100)
@@ -322,7 +322,7 @@ class account:
         output.append('-'*100)
         output.append('\n'.join(self.consolidation_log)+'\n')
         return output
-        
+
     def print_longest_payment_chains(self) -> list:
         output = []
         output.append('-'*100)
@@ -336,5 +336,5 @@ class account:
                 output.append('\n'.join(e2.print_details()))
                 output.append('')
         return output
-    
+
     ############################ END DISPLAYING RESULTS ##########################################

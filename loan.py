@@ -6,7 +6,7 @@ class loan:
         for e in data:
             for k, v in e.items():
                 self.__dict__[k.replace(' ', '_').lower()] = v
-        
+
         self.loan_type = self.loan_type_description
         self.data_weird = []
         self.loan_date_obj = datestr_to_obj(self.loan_date)
@@ -19,7 +19,7 @@ class loan:
             self.consolidates = []
         self.is_subsidized = False if 'UNSUBSIDIZED' in self.loan_type_description else True
         self.loan_award_id = self.loan_award_id.replace('*', '')
-        
+
         self.create_status_log(self.file_data)
         self.sort_status()
         self.create_paid_on_data()
@@ -28,14 +28,14 @@ class loan:
         self.create_cal_of_status()
         self.create_pd_cal_of_status()
         self.favorable_cal = create_most_favorable_cal(self.status_cal)
-        
+
         self.create_payment_data()
         self.create_disbursment_data()
         self.create_consolidation_data()
         self.qualified_months = count_qualified_months(
             self.favorable_cal, self.dates_cal, self.is_paid
         )
-        
+
     def create_status_log(self, file_data: list[dict]) -> list:
         data = [e for e in file_data if 
             'Loan Status' in next(iter(e.keys())) and 
@@ -52,7 +52,7 @@ class loan:
         for e in status_changes:
             e['Loan Status Effective Date Obj'] = datestr_to_obj(e['Loan Status Effective Date'])
         self.status_changes = status_changes
-       
+
     def create_payment_data(self):
         if self.is_cancelled:
             self.payment_map = {}
@@ -65,7 +65,7 @@ class loan:
             for e in self.status_changes:
                 if 'REPAYMENT' in e['Loan Status Description']:
                     self.first_repayment = e['Loan Status Effective Date Obj']
-                    
+
     def create_payment_status(self, status_changes: list[dict]) -> dict:
         payment_map = {}
         last_key = len(status_changes) -1
@@ -85,7 +85,7 @@ class loan:
                     payment_map[e[status_key]] + \
                     diff_month(e[date_key], status_changes[i+1][date_key])
         return payment_map
-                    
+
     def create_consolidation_data(self):
         self.consolidated_on = None
         self.consolidated_on_mo_yr = None
@@ -95,7 +95,7 @@ class loan:
                 self.consolidated_on = dateobj_to_str(self.consolidated_on_obj)
                 self.consolidated_on_mo_yr = dateobj_to_str_mo_yr(self.consolidated_on_obj)
                 self.consolidated_by = ''
-                
+
     def create_paid_on_data(self):
         self.paid_on = None
         self.paid_on_yr = None
@@ -121,7 +121,7 @@ class loan:
         for e in disbursements:
             e['Loan Disbursement Date Obj'] = datestr_to_obj(e['Loan Disbursement Date'])
         return disbursements
-                    
+
     def create_disbursment_data(self):
         if not self.is_cancelled:
             self.disbursment_map = self.create_disbursement_log(self.file_data)
@@ -136,7 +136,7 @@ class loan:
         else:
             self.disbursment_map = {}
             self.disbursements = []
-    
+
     def check_consolidation_amounts(self):
         if self.is_consolidated:
             self.consolidated_amounts = []
@@ -145,7 +145,7 @@ class loan:
                     currency_to_decimal(e.loan_amount) + currency_to_decimal(e.capitalized_interest)
                 )
             self.consolidated_amount = sum(self.consolidated_amounts)
-            
+
     def sort_status(self) -> list[dict]:
         """Sorts the loan status changes
 
@@ -153,7 +153,7 @@ class loan:
         :return: the sorted status changes
         """
         self.status_changes = sorted(self.status_changes, key=lambda x: x["Loan Status Effective Date Obj"])
-    
+
     def create_status_durations(self) -> list[tuple]:
         """Returns a status and duration of status changes for a given loan
 
@@ -176,7 +176,7 @@ class loan:
         else:
             status_updates.append((1, self.status_changes[-1]['Loan Status']))
         self.status_durations = status_updates
-        
+
     def create_loan_cal(self):
         end_loan_date = self.paid_on_obj if self.is_paid else dt.today()
         # The data sucks... here is an example.
@@ -200,7 +200,7 @@ class loan:
         self.status_cal = [set() for i in range(0, self.loan_months)]
         if self.is_paid:
             self.status_cal.append(set())
-        
+
     def create_cal_of_status(self):
         i = 0
         for e in self.status_durations:
@@ -209,7 +209,7 @@ class loan:
             i = i + e[0]
         if self.is_paid:
             self.status_cal.pop(-1)
-        
+
     def create_pd_cal_of_status(self):
         status_pd_cal = cal_list_to_pd_cal(
             self.status_cal,
@@ -219,7 +219,7 @@ class loan:
         self.status_pd_cal = status_pd_cal
 
     ############################ DISPLAYING RESULTS ##########################################
-                
+
     def print_details(self) -> list:
         output = []
         attribs = [
@@ -263,8 +263,8 @@ class loan:
                             for e in self.status_changes]))
                 else:
                     output.append(f'{f} = {self.__dict__[f]}')
-        output.append('')            
+        output.append('')
         output.append(self.status_pd_cal.to_html().replace('\n', ''))
         return output
-    
+
     ############################ END DISPLAYING RESULTS ##########################################
