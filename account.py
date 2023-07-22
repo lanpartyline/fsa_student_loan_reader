@@ -6,8 +6,8 @@ class account:
         self.forgive_start = dt.strptime('7/1/1994', '%m/%d/%Y')
         self.contents = contents
         self.file_lines, self.file_data = self.read_contents(contents)
-        self.data_source = next(iter(self.file_data[0].values()))
-        self.data_pulled = next(iter(self.file_data[1].values()))
+        #self.data_source = next(iter(self.file_data[0].values()))
+        #self.data_pulled = next(iter(self.file_data[1].values()))
         self.parse_loan_details()
         self.parse_enrollment_info()
         self.parse_award_info()
@@ -25,14 +25,14 @@ class account:
         self.qualified_months = count_qualified_months(self.favorable_cal, self.dates_cal)
         # self.borrow_cal_favorable = self.get_most_favorable_cal(self.borrow_cal)
 
-        self.original_loans = [e for e in 
+        self.original_loans = [e for e in
             self.all_loans if not e.is_consolidated and not e.is_cancelled
         ]
-        self.consolidated_loans = [e for e in 
+        self.consolidated_loans = [e for e in
             self.all_loans if e.is_consolidated and not e.is_cancelled
         ]
         self.cancelled_loans = [e for e in self.all_loans if e.is_cancelled]
-        self.current_loans = [e for e in 
+        self.current_loans = [e for e in
             self.all_loans if not isinstance(e.paid_on, str) and not e.is_cancelled
         ]
         self.originally_loaned = sum([
@@ -57,33 +57,41 @@ class account:
 
 
     ############################ READING AND PARSING FILE ##########################################
-    def read_contents(self, contents) -> tuple[list, list[dict]]:
-        file_lines = [e.replace('\r', '') for e in contents.split('\n')]
+    def read_contents(self, contents: str) -> tuple[list, list[dict]]:
+        print(f'chunking Input')
+        file_lines = [e.replace('\r', '') for e in contents.strip().split('\n')]
         file_data = [{e.split(':')[0]: e.split(':')[1]} for e in file_lines]
+        print(f'input length is {len(file_lines)}')
         return file_lines, file_data
 
     def parse_loan_details(self):
-        loan_starts = [
-            i for i, e in enumerate(self.file_data)
-            if 'Loan Type Code' == next(iter(e.keys()))
-        ]
+        try:
+            loan_starts = [
+                i for i, e in enumerate(self.file_data)
+                if 'Loan Type Code' == next(iter(e.keys()))
+            ]
 
-        loan_ends = [e for e in loan_starts[1:]]
-        # get the last line for the final loan
-        ii = loan_ends[-1]
-        loan_ends = loan_ends + [
-            i+ii for i, e in enumerate(self.file_data[ii:])
-            if 'Loan Special Contact' == next(iter(e.keys()))]
+            loan_ends = [e for e in loan_starts[1:]]
+            # get the last line for the final loan
+            ii = loan_ends[-1]
+            loan_ends = loan_ends + [
+                i+ii for i, e in enumerate(self.file_data[ii:])
+                if 'Loan Special Contact' == next(iter(e.keys()))]
 
-        loan_start_ends = [
-            (loan_starts[i], loan_ends[i])
-            for i in range(0, len(loan_ends))
-        ]
+            loan_start_ends = [
+                (loan_starts[i], loan_ends[i])
+                for i in range(0, len(loan_ends))
+            ]
+        except Exception as ex:
+            print(f'Error unable to get start and end line, {ex}')
 
-        self.all_loans = [
-            loan(self.file_data[e[0]: e[1]])
-            for e in loan_start_ends
-        ]
+        self.all_loans = []
+        for e in loan_start_ends:
+            try:
+                self.all_loans.append(loan(self.file_data[e[0]: e[1]]))
+            except Exception as ex:
+                print(f'Error in file between lines: {e[0]} and {e[1]}, err: {ex}')
+
         self.non_loan_file_data = \
             self.file_data[0: loan_start_ends[0][0]] + \
             self.file_data[loan_start_ends[-1][1]: -1]
@@ -286,7 +294,7 @@ class account:
         output.append('AGGREGATE CALENDAR')
         output.append(self.status_pd_cal.to_html().replace('\n', ''))
 
-        # Data weirdness needs works, serparate        
+        # Data weirdness needs works, serparate
         # # Check for oddities and print warnings
         # warnings = []
         # if self.capitalized_interest + self.originally_loaned != self.current_principal:
