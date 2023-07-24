@@ -5,33 +5,6 @@ import re
 import os
 import pandas as pd
 
-def find_file() -> str:
-    """Search for a specific file in a specific location
-
-    :return: file path
-    """
-    # Download File Here: https://studentaid.gov/aid-summary/loans, click "Download My Aid Data"
-    look_for_files = ['mystudentdata.txt']
-    look_in = [f'{os.getenv("HOMEPATH")}\\Downloads\\']
-    file = None
-    for folder in look_in:
-        for file in look_for_files:
-            if file in [e.lower() for e in os.listdir(folder)]:
-                return f'{folder}\\{file}'
-    print('Student File Not Found')
-    print(f'Looked for {look_for_files} in {look_in}')
-    exit()
-
-def read_file(filepath: str) -> str:
-    """Reads file and returns contents
-
-    :param filepath: file oath to read
-    :return: contents
-    """
-    with open(filepath) as f:
-        fc = f.read()
-    return fc
-
 def diff_month(d1: dt, d2: dt) -> int:
     """Returns the number of months between two dates
 
@@ -148,7 +121,7 @@ def count_qualified_months(cal_list: list, dates_list: list[dt], isPaid: bool=Fa
     # 12 or more months of consecutive forbearance or 36 or more months of cumulative forbearance;
     # any months spent in economic hardship or military deferments in 2013 or later;
     # any months spent in any deferment (with the exception of in-school deferment) prior to 2013; and
-    # any time in repayment (or deferment or forbearance, if applicable) 
+    # any time in repayment (or deferment or forbearance, if applicable)
     #   on earlier loans before consolidation of those loans into a consolidation loan.
 
     # because it is impossible to tell the diff. between economic vs other deferments,
