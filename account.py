@@ -9,14 +9,14 @@ class account:
         #self.data_source = next(iter(self.file_data[0].values()))
         #self.data_pulled = next(iter(self.file_data[1].values()))
         self.parse_loan_details()
-        self.parse_enrollment_info()
-        self.parse_award_info()
-        self.parse_studnet_info()
-        self.parse_program_info()
-        self.parse_undergrad_info()
-        self.parse_grad_info()
+        # self.parse_enrollment_info()
+        # self.parse_award_info()
+        # self.parse_studnet_info()
+        # self.parse_program_info()
+        # self.parse_undergrad_info()
+        # self.parse_grad_info()
         self.sort_loans()
-        self.create_consolidations()
+        #self.create_consolidations()
         # self.calculate_longest_payment_chain()
         self.create_unified_status_cal()
         self.favorable_cal = create_most_favorable_cal(self.status_cal)
@@ -58,9 +58,8 @@ class account:
 
     ############################ READING AND PARSING FILE ##########################################
     def read_contents(self, contents: str) -> tuple[list, list[dict]]:
-        print(f'chunking Input')
-        file_lines = [e.replace('\r', '') for e in contents.strip().split('\n')]
-        file_data = [{e.split(':')[0]: e.split(':')[1]} for e in file_lines]
+        file_lines = [e.replace('\r', '') for e in contents.split('\n')]
+        file_data = [{e.split(':')[0]: e.split(':')[1]} for e in file_lines if ':' in e]
         print(f'input length is {len(file_lines)}')
         return file_lines, file_data
 
@@ -90,7 +89,7 @@ class account:
             try:
                 self.all_loans.append(loan(self.file_data[e[0]: e[1]]))
             except Exception as ex:
-                print(f'Error in file between lines: {e[0]} and {e[1]}, err: {ex}')
+                print(f'Error creating loanObj, lines: {e[0]} and {e[1]}, err: {ex}')
 
         self.non_loan_file_data = \
             self.file_data[0: loan_start_ends[0][0]] + \
@@ -98,7 +97,7 @@ class account:
 
     def parse_enrollment_info(self):
         self.enrollment_log = [
-            e for e in self.non_loan_file_data 
+            e for e in self.non_loan_file_data
             if 'Enrolled' in next(iter(e.keys()))
             ]
         for e in self.enrollment_log:
@@ -206,6 +205,12 @@ class account:
         account_cal = [set() for i in range(0, borrower_months)]
         for loanObj in [e for e in self.all_loans if not e.is_cancelled]:
             account_cal = self.merge_loan_cal_to_status_cal(loanObj, account_cal)
+        # remove loans that were paid off that were not part of consolidated loan and are paid off
+        # NEEDS WORK, ERRORS
+        # for e in [e for e in self.all_loans if (not e.was_consolidated and e.is_paid)]:
+        #     rel_pos = self.cal_relative_pos(e)
+        #     for i, e2 in enumerate(range(rel_pos[0], rel_pos[1])):
+        #         account_cal[e2] = account_cal[e2] - e.status_cal[i]
         self.status_cal = account_cal
         self.dates_cal = [first_date + relativedelta(months=+i) for i in range(0, borrower_months)]
 
@@ -326,9 +331,9 @@ class account:
             output.append('-'*100)
             output.append('')
         output.append('-'*100)
-        output.append('Consolidation Log')
-        output.append('-'*100)
-        output.append('\n'.join(self.consolidation_log)+'\n')
+        # output.append('Consolidation Log')
+        # output.append('-'*100)
+        # output.append('\n'.join(self.consolidation_log)+'\n')
         return output
 
     def print_longest_payment_chains(self) -> list:
