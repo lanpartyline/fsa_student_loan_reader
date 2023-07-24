@@ -89,12 +89,14 @@ class loan:
     def create_consolidation_data(self):
         self.consolidated_on = None
         self.consolidated_on_mo_yr = None
-        for e in self.status_changes:
-            if "CONSOLIDATION" in e['Loan Status Description']:
-                self.consolidated_on_obj = e['Loan Status Effective Date Obj']
-                self.consolidated_on = dateobj_to_str(self.consolidated_on_obj)
-                self.consolidated_on_mo_yr = dateobj_to_str_mo_yr(self.consolidated_on_obj)
-                self.consolidated_by = ''
+        if "CONSOLIDATION" in self.status_changes[-1]['Loan Status Description']:
+            self.consolidated_on_obj = self.status_changes[-1]['Loan Status Effective Date Obj']
+            self.consolidated_on = dateobj_to_str(self.consolidated_on_obj)
+            self.consolidated_on_mo_yr = dateobj_to_str_mo_yr(self.consolidated_on_obj)
+            self.consolidated_by = ''
+            self.was_consolidated = True
+        else:
+            self.was_consolidated = False
 
     def create_paid_on_data(self):
         self.paid_on = None
